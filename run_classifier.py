@@ -1,6 +1,7 @@
 
 from sentiment_reader import SentimentCorpus
 from multinomial_naive_bayes import MultinomialNaiveBayes
+import spacy
 
 if __name__ == '__main__':
     dataset = SentimentCorpus()
@@ -15,7 +16,8 @@ if __name__ == '__main__':
     predict_test = nb.test(dataset.test_X, params)
     eval_test = nb.evaluate(predict_test, dataset.test_y)
     
-    print "Accuracy on training set: %f, on test set: %f" % (eval_train, eval_test)
+    print("Accuracy on training set: %f, on test set: %f" % (eval_train, eval_test))
+
 
 
 

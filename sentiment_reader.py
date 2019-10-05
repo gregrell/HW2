@@ -27,7 +27,7 @@ class SentimentCorpus:
 
 def split_train_dev_test(X, y, train_per, dev_per, test_per):
     if (train_per + dev_per + test_per) > 1:
-        print "train/dev/test splits should sum to one"
+        print ("train/dev/test splits should sum to one")
         return
     dim = y.shape[0]
     split1 = int(dim * train_per)
@@ -78,7 +78,7 @@ def build_dicts():
 
     # remove all features that occur less than 5 (threshold) times
     to_remove = []
-    for key, value in feat_counts.iteritems():
+    for key, value in feat_counts.items():
         if value < 5:
             to_remove.append(key)
     for key in to_remove:
