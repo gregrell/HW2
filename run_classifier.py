@@ -1,12 +1,13 @@
 
 from sentiment_reader import SentimentCorpus
 from multinomial_naive_bayes import MultinomialNaiveBayes
-import spacy
+import segmenter
 
 if __name__ == '__main__':
-    print('Using SpaCy version',spacy.__version__)
+
     dataset = SentimentCorpus()
     nb = MultinomialNaiveBayes()
+    segmenter.perform()
     
     #params = nb.train(dataset.train_X, dataset.train_y)
 
