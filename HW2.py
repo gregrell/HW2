@@ -2,12 +2,13 @@ import spacy
 import os
 from collections import Counter
 import pickle
+import math
 
 
 
 
 
-def perform():
+def Run():
     print('Using SpaCy version', spacy.__version__)
     print("Performing Segmentation")
     hockeyDirectory ="20news-bydate/20news-bydate-train/rec.sport.hockey"
@@ -59,6 +60,15 @@ def perform():
     print('Total Hockey TESTING Docs ',len(nlpHockeyTestDocs))
     print('Total Autos TESTING Docs', len(nlpAutosTestDocs))
 
+    #sentence segmentation
+    sentences_Hockey=sentences(nlpHockeyDocs)
+    sentences_Autos=sentences(nlpAutosDocs)
+
+    print("Number of sentences in Hockey training",len(sentences_Hockey))
+    print("Number of sentences in Autos training",len(sentences_Autos))
+    print("Total number of sentences in training data ",len(sentences_Autos)+len(sentences_Hockey))
+
+
 
     #tokenize
     tokenizedHockeyDocs = tokenize(nlpHockeyDocs)
@@ -67,14 +77,36 @@ def perform():
     print('Tokenized Training Docs')
 
     #group into bag of unique words returned as Counter objects
-    dictHockeyWords,bagofHockeyWords=bagOfWords(tokenizedHockeyDocs)
-    dictAutosWords,bagofAutosWords=bagOfWords(tokenizedAutosDocs)
-    print(dictHockeyWords)
-    print(dictAutosWords)
-    print('Unique words in Hockey Category ',len(dictHockeyWords))
-    print('Unique words in Autos Category ',len(dictAutosWords))
-    print('Total Hockey Words', len(bagofHockeyWords))
-    print('Total Autos Words', len(bagofAutosWords))
+    dictHockey,bagHockey=bagOfWords(tokenizedHockeyDocs)
+    dictAutos,bagAutos=bagOfWords(tokenizedAutosDocs)
+    dictBoth=dictHockey+dictAutos
+    totalDocs=len(nlpHockeyDocs)+len(nlpAutosDocs)
+    priorHockey=len(hockeyDocs)/totalDocs
+    priorAutos=len(autosDocs)/totalDocs
+
+    #print(dictHockey)
+    #print(dictAutos)
+    #print(dictBoth)
+    print('Unique words in Hockey Category ',len(dictHockey))
+    print('Unique words in Autos Category ',len(dictAutos))
+    print('Unique words in both categories ',len(dictBoth))
+    print('Total Hockey Words', len(bagHockey))
+    print('Total Autos Words', len(bagAutos))
+    print('Prior of class Hockey',priorHockey)
+    print('Prior of class Autos',priorAutos)
+
+
+    #Perform Naive Bayes Classification
+    #pHockey=classDoc(nlpHockeyTestDocs,dictHockey,bagHockey,dictBoth,priorHockey)
+    #print('probability that doc is in hockey ',pHockey)
+    #pAutos=classDoc(nlpHockeyTestDocs,dictAutos,bagAutos,dictBoth,priorAutos)
+    #print('probability that doc is in Autos ',pAutos)
+
+
+
+
+
+
 
 
 #Read the document files return the raw text as a list of docs
@@ -95,6 +127,14 @@ def nlpDocs(docs):
         converted.append(spacy_doc)
     return converted
 
+#Sentence Segmenter, return list of sentences given a list of nlp docs
+def sentences(nlpDocs):
+    sentences=[]
+    for nlpDoc in nlpDocs:
+        for sent in nlpDoc.sents:
+            sentences.append(sent)
+    return sentences
+
 #Tokenize document, remove stop words, apply filter, return a list of lists. List data is the doc tokens
 def tokenize(docs):
     tokenizedDocs=[]
@@ -113,13 +153,13 @@ def bagOfWords(docs):
         bagofWords.extend(doc)
     cnt = Counter(bagofWords)
     return cnt, bagofWords
-
+#Used to save NLP data for speed in development instead of performing each run
 def saveNlpDoc(path,docs):
     fb = open(path, 'wb')
     pickle.dump(docs, fb)
     print('Saved data to ',path)
     fb.close()
-
+#Used to save NLP data for speed in development instead of performing each run
 def openNlpDoc(path):
     itemlist=[]
     if os.path.exists(path):
@@ -135,6 +175,35 @@ def openNlpDoc(path):
 
 
 
+
+
+
+
+#NB from scratch --- ABANDONNED
+def classDoc(docs,counter,bag,uniqueWords,prior):
+    tkDocs=tokenize(docs)
+    overall_p=0
+    for token in tkDocs[100]:
+        overall_p+= likelihood(token,counter,bag)
+    return overall_p+math.log10(prior)
+
+
+
+def getOccurrences(token,counter):
+    result=counter.get(token)
+    if result == None:
+        result=0
+    return result
+
+
+
+
+def likelihood(token,counter,bag):
+    l=getOccurrences(token,counter)/len(bag)
+    if l!=0:
+        return math.log10(l)
+    else:
+        return 0
 
 
 

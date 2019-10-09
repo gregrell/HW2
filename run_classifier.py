@@ -1,13 +1,15 @@
 
 from sentiment_reader import SentimentCorpus
 from multinomial_naive_bayes import MultinomialNaiveBayes
-import segmenter
+import HW2
+import sklearn_stuff
 
 if __name__ == '__main__':
 
     dataset = SentimentCorpus()
     nb = MultinomialNaiveBayes()
-    segmenter.perform()
+    HW2.Run()
+    #sklearn_stuff.Run()
     
     #params = nb.train(dataset.train_X, dataset.train_y)
 
