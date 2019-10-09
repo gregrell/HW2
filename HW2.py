@@ -3,6 +3,7 @@ import os
 from collections import Counter
 import pickle
 import math
+import numpy as np
 
 
 
@@ -19,7 +20,9 @@ def Run():
     pathNlpAutosDocs="nlpAutosDocs.txt"
     pathNlpHockeyTestDocs="nlpHockeyTestDocs.txt"
     pathNlpAutosTestDocs="nlpAutosTestDocs.txt"
-
+    pathTrainingFeatures="trainingFeatures.txt"
+    pathHockeyFeatures="hockeyFeatures.txt"
+    pathAutosFeatures="autosFeatures.txt"
 
     #Grab file data into doc list objects
     hockeyDocs=readDocs(hockeyDirectory)
@@ -48,12 +51,14 @@ def Run():
         nlpHockeyTestDocs = nlpDocs(hockeyTestDocs)
         saveNlpDoc(pathNlpHockeyTestDocs,nlpHockeyTestDocs)
 
-
-    nlpAutosTestDocs,read=openNlpDoc(pathNlpAutosTestDocs)
+    nlpAutosTestDocs, read = openNlpDoc(pathNlpAutosTestDocs)
     if not read:
         print('Could not find saved data... performing nlp conversion on Autos Testing Docs')
         nlpAutosTestDocs = nlpDocs(autosTestDocs)
-        saveNlpDoc(pathNlpAutosTestDocs,nlpAutosTestDocs)
+        saveNlpDoc(pathNlpAutosTestDocs, nlpAutosTestDocs)
+
+
+
 
     print('Total Hockey Docs ',len(nlpHockeyDocs))
     print('Total Autos Docs', len(nlpAutosDocs))
@@ -73,33 +78,70 @@ def Run():
     #tokenize
     tokenizedHockeyDocs = tokenize(nlpHockeyDocs)
     tokenizedAutosDocs = tokenize(nlpAutosDocs)
-
-    print('Tokenized Training Docs')
+    tokenizedHockeyTest = tokenize(nlpHockeyTestDocs)
+    tokenizedAutosTest = tokenize(nlpAutosTestDocs)
+    print('Tokenized  Docs')
 
     #group into bag of unique words returned as Counter objects
-    dictHockey,bagHockey=bagOfWords(tokenizedHockeyDocs)
-    dictAutos,bagAutos=bagOfWords(tokenizedAutosDocs)
-    dictBoth=dictHockey+dictAutos
+    counterHockey,bagHockey=bagOfWords(tokenizedHockeyDocs)
+    counterAutos,bagAutos=bagOfWords(tokenizedAutosDocs)
+
+
+    counterBoth=counterHockey+counterAutos
     totalDocs=len(nlpHockeyDocs)+len(nlpAutosDocs)
     priorHockey=len(hockeyDocs)/totalDocs
     priorAutos=len(autosDocs)/totalDocs
 
-    #print(dictHockey)
-    #print(dictAutos)
-    #print(dictBoth)
-    print('Unique words in Hockey Category ',len(dictHockey))
-    print('Unique words in Autos Category ',len(dictAutos))
-    print('Unique words in both categories ',len(dictBoth))
+    #print(counterHockey)
+    #print(counterAutos)
+    #print(counterBoth)
+    print('Unique words in Hockey Category ',len(counterHockey))
+    print('Unique words in Autos Category ',len(counterAutos))
+    print('Unique words in both categories ',len(counterBoth))
     print('Total Hockey Words', len(bagHockey))
     print('Total Autos Words', len(bagAutos))
     print('Prior of class Hockey',priorHockey)
     print('Prior of class Autos',priorAutos)
 
+    #Create feature set based on bag of words model from both classes
+    #first need the dictionary of all words
+    dictAll=counterBoth.items()
+    print(dictAll)
+
+    trainingFeatures, read = openNlpDoc(pathTrainingFeatures)
+    if not read:
+        print('Could not find saved data... performing feature count on training features')
+        featuresHockey = featureCount(dictAll, bagHockey)
+        featuresAutos = featureCount(dictAll, bagAutos)
+        trainingFeatures = np.row_stack((featuresHockey, featuresAutos))
+        saveNlpDoc(pathTrainingFeatures, trainingFeatures)
+
+    hockeyTestFeatures, read = openNlpDoc(pathHockeyFeatures)
+    if not read:
+        print('Could not find saved data... performing feature count on hockey test set')
+        hockeyTestFeatures = []
+        for doc in tokenizedHockeyTest:
+            docFeatures = featureCount(dictAll, doc)
+            hockeyTestFeatures.append(docFeatures)
+        saveNlpDoc(pathHockeyFeatures, hockeyTestFeatures)
+
+    autosTestFeatures, read = openNlpDoc(pathAutosFeatures)
+    if not read:
+        print('Could not find saved data... performing feature count on autos test set')
+        autosTestFeatures = []
+        for doc in tokenizedAutosTest:
+            docFeatures = featureCount(dictAll, doc)
+            autosTestFeatures.append(docFeatures)
+        saveNlpDoc(pathAutosFeatures, autosTestFeatures)
+
+    print('Feature Set Loaded')
+
+
 
     #Perform Naive Bayes Classification
-    #pHockey=classDoc(nlpHockeyTestDocs,dictHockey,bagHockey,dictBoth,priorHockey)
+    #pHockey=classDoc(nlpHockeyTestDocs,counterHockey,bagHockey,counterBoth,priorHockey)
     #print('probability that doc is in hockey ',pHockey)
-    #pAutos=classDoc(nlpHockeyTestDocs,dictAutos,bagAutos,dictBoth,priorAutos)
+    #pAutos=classDoc(nlpHockeyTestDocs,counterAutos,bagAutos,counterBoth,priorAutos)
     #print('probability that doc is in Autos ',pAutos)
 
 
@@ -170,6 +212,19 @@ def openNlpDoc(path):
     else:
         print('Could not find ',path)
         return itemlist,False
+
+
+
+def featureCount(dict, words):
+    vector=[]
+    for feature in dict:
+        number=words.count(feature[0])
+        vector.append(number)
+    return vector
+
+def docAsFeatureArray(tokens,dict):
+    vector=featureCount(dict,tokens)
+    return vector
 
 
 
