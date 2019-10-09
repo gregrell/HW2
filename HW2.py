@@ -136,6 +136,25 @@ def Run():
 
     print('Feature Set Loaded')
 
+    #Multinomial Naive Bayes Code
+    from sklearn.naive_bayes import MultinomialNB
+    print("sklearn ")
+    X = trainingFeatures
+    y = np.array(['Hockey', 'Autos',])  # classes
+    clf = MultinomialNB()
+    clf.fit(X, y)
+    # MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)
+    print("line")
+    print(X)
+    #print(clf.predict(hockeyTestFeatures[0]))
+
+
+
+
+
+
+
+
 
 
     #Perform Naive Bayes Classification
