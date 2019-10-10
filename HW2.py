@@ -1,3 +1,4 @@
+
 import spacy
 import os
 from collections import Counter
@@ -5,10 +6,8 @@ import pickle
 import numpy as np
 
 
-
-
-
 def Run():
+
     print('Using SpaCy version', spacy.__version__)
     print("Performing Segmentation")
     hockeyDirectory ="20news-bydate/20news-bydate-train/rec.sport.hockey"
@@ -136,18 +135,32 @@ def Run():
     clf = MultinomialNB()
     clf.fit(X, y)
     # MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)
-
     hockey_testResult=clf.predict(H_test)
     autos_testResult=clf.predict(A_test)
 
     hockey_testCorrectCount = np.count_nonzero(hockey_testResult)
     autos_testCorrectCount = len(autos_testResult)-np.count_nonzero(autos_testResult)
+    overall_testCorrectCount = hockey_testCorrectCount+autos_testCorrectCount
+    overall_testCount = (len(hockey_testResult)+len(autos_testResult))
 
     hockey_testAccuracy = hockey_testCorrectCount/len(hockey_testResult)
     autos_testAccuracy = autos_testCorrectCount/len(autos_testResult)
-    print('Classifier classed ', hockey_testCorrectCount,' of ',len(hockey_testResult),' hockey test documents for',hockey_testAccuracy,' accuracy')
-    print('Classifier classed ', autos_testCorrectCount,' of ',len(autos_testResult),' autos test documents for',autos_testAccuracy,' accuracy')
+    overall_testAccuracy = overall_testCorrectCount/overall_testCount
+    overall_testCount=(len(hockey_testResult)+len(autos_testResult))
 
+
+    print('Classifier classed ', hockey_testCorrectCount,' of ',len(hockey_testResult),' hockey test documents for',hockey_testAccuracy*100,'% accuracy')
+    print('Classifier classed ', autos_testCorrectCount,' of ',len(autos_testResult),' autos test documents for',autos_testAccuracy*100,'% accuracy')
+    print('Classifier classed ', overall_testCorrectCount,' of ',overall_testCount,' OVERALL test documents for',overall_testAccuracy*100,'% accuracy')
+
+    #F1 Score - using sklearn.metrics.f1_score
+    from sklearn.metrics import f1_score as f1
+    predict_vector=np.concatenate([hockey_testResult,autos_testResult])
+    golden_hockey=np.ones(len(hockey_testResult))
+    golden_autos=np.zeros(len(autos_testResult))
+    golden_vector=np.concatenate([golden_hockey,golden_autos])
+    f1score=f1(golden_vector,predict_vector)
+    print('The F1 score calculated by sklearn.metrics.f1_score is :',f1score)
 
 
 
