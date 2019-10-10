@@ -176,7 +176,7 @@ def Features(path, dict, docs):
 def readDocs(path):
     docAsList=[]
     for doc in os.listdir(path):
-        with open(os.path.join(path,doc)) as file:
+        with open(os.path.join(path,doc),encoding='ISO-8859-1') as file:
             docAsList.append(file.read())
             file.close()
     return docAsList
